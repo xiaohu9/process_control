@@ -1,7 +1,6 @@
 package common;
 
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -110,18 +109,21 @@ public class ProcessExecutor <T> {
                     try {
                         futureList.get(i).get();
                     } catch (Throwable t) {
+                        Throwable e = t.getCause();
                         if (processDtoList.get(i).interruptError) {
                             // 中断当前线程，抛出错误
-                            if (t instanceof RuntimeException) {
-                                throw t;
+                            if (e instanceof RuntimeException) {
+                                throw (RuntimeException) e;
                             } else {
-                                throw new RuntimeException(t.getCause());
+                                throw new RuntimeException(e);
                             }
                         }
                     }
                 }
-            } catch (Throwable t) {
-                throw new RuntimeException(t.getCause());
+            } catch (InterruptedException t) {
+                // 异常中断当前线程
+                // 将中断标志位设置为 true，线程会自动扫描
+                Thread.currentThread().interrupt();
             }
         }
     }
