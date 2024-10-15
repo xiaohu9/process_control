@@ -1,7 +1,8 @@
-package common;
+package com.brian.process.common;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +10,11 @@ import java.util.TreeMap;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 
+/**
+ * 执行流程：导入流程执行器组件 -> addThen() -> init() -> execute()
+ */
 @Slf4j
+@Component
 public class ProcessExecutor <T> {
     private ExecutorService threadPoolExecutor;
     private TreeMap<Integer, List<ProcessDto>> processMap = new TreeMap<>();
@@ -21,7 +26,8 @@ public class ProcessExecutor <T> {
     }
 
     // 流程初始化
-    public void init() {
+    public void init(ExecutorService executorService) {
+        this.threadPoolExecutor = executorService;
         processMap.values().forEach(param -> {
             if (rootConsumer == null) {
                 rootConsumer = new ProcessConsumer(param);
@@ -96,7 +102,15 @@ public class ProcessExecutor <T> {
                 }
 
                 futureList.add(threadPoolExecutor.submit(() -> {
-                    processDto.getProcess().accept(context);
+                    try {
+                        processDto.getProcess().accept(context);
+                    }  catch(Throwable t) {
+                        if (processDto.interruptError) {
+                            throw t;
+                        }
+                    } finally {
+                        countDownLatch.countDown();
+                    }
                 }));
             }
 

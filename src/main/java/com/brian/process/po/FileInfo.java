@@ -1,4 +1,4 @@
-package entity.po;
+package com.brian.process.po;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;

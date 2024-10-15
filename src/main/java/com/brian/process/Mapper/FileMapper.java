@@ -1,6 +1,6 @@
-package Mapper;
+package com.brian.process.Mapper;
 
-import entity.po.FileInfo;
+import com.brian.process.po.FileInfo;
 
 public interface FileMapper {
 
